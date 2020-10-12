@@ -4,6 +4,8 @@ from matplotlib import pyplot as pl
 import os
 import time
 import pickle
+from scipy.optimize import curve_fit
+from numpy import sqrt
 
 
 # Constant
@@ -12,9 +14,24 @@ bzDistributionPath = './BzDistribution.csv'
 alpha = 1e-4
 h = 1e-6
 minRadius = 1.5e-2
-loms = nu.linspace(0, 0.9*minRadius, 20)
+Z0 = 0.05
+loms = nu.linspace(0, 0.9*minRadius, 100)
 # gloabl variable
 ws = nu.zeros(6)
+def wsModel(loms, w0, w1, w2, w3, w4, w5):
+    n = len(loms)
+    result = nu.concatenate([
+        nu.ones(n).reshape(-1, 1),
+        loms.reshape(-1, 1),
+        (loms**2).reshape(-1, 1),
+        (loms**3).reshape(-1, 1),
+        (loms**4).reshape(-1, 1),
+        (loms**5).reshape(-1, 1)
+    ], axis=-1) @ nu.array([w0, w1, w2, w3, w4, w5]).reshape(-1, 1)
+    return result.ravel()
+ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(minRadius**2 - loms**2) + Z0, p0=ws.tolist())
+ws = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
+
 
 def curveFunction(loms):
     if loms is nu.float:
@@ -66,6 +83,10 @@ def loss(ws):
 
 
 # Main
+# show init ws
+# pl.scatter(loms, sqrt(minRadius**2 - loms**2) + Z0)
+# pl.plot(loms, curveFunction(loms))
+# pl.show()
 
 averageLosses = nu.array([])
 while True:
