@@ -71,7 +71,7 @@ def loss(ws):
         'r': loms,
         'z': zms
     })
-    data.to_csv(rawPath)
+    data.to_csv(rawPath, index=False)
     # get loss
     cookedPath = './BzDistribution.csv'
     while not os.path.exists(cookedPath):
