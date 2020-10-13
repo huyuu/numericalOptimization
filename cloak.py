@@ -29,7 +29,7 @@ def wsModel(loms, w0, w1, w2, w3, w4, w5):
         (loms**5).reshape(-1, 1)
     ], axis=-1) @ nu.array([w0, w1, w2, w3, w4, w5]).reshape(-1, 1)
     return result.ravel()
-ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(minRadius**2 - loms**2) + Z0-minRadius/2, p0=ws.tolist())
+ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(minRadius**2 - loms**2) + Z0-minRadius, p0=ws.tolist())
 ws = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
 
 
@@ -84,7 +84,7 @@ def loss(ws):
 
 # Main
 # show init ws
-# pl.scatter(loms, sqrt(minRadius**2 - loms**2) + Z0-minRadius/2)
+# pl.scatter(loms, sqrt(minRadius**2 - loms**2) + Z0-minRadius)
 # pl.plot(loms, curveFunction(loms))
 # pl.show()
 
