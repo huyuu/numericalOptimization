@@ -18,19 +18,6 @@ Z0 = 0.05
 loms = nu.linspace(0, 0.9*minRadius, 100)
 # gloabl variable
 ws = nu.zeros(6)
-def wsModel(loms, w0, w1, w2, w3, w4, w5):
-    n = len(loms)
-    result = nu.concatenate([
-        nu.ones(n).reshape(-1, 1),
-        loms.reshape(-1, 1),
-        (loms**2).reshape(-1, 1),
-        (loms**3).reshape(-1, 1),
-        (loms**4).reshape(-1, 1),
-        (loms**5).reshape(-1, 1)
-    ], axis=-1) @ nu.array([w0, w1, w2, w3, w4, w5]).reshape(-1, 1)
-    return result.ravel()
-ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(minRadius**2 - loms**2) + Z0-minRadius, p0=ws.tolist())
-ws = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
 
 
 def curveFunction(loms):
@@ -88,7 +75,37 @@ def loss(ws):
 # pl.plot(loms, curveFunction(loms))
 # pl.show()
 
-averageLosses = nu.array([])
+# set avgLosses
+if os.path.exists('avgerageLosses.pickle'):
+    with open('avgerageLosses.pickle', 'rb') as file:
+        averageLosses = pickle.load(file)
+else:
+    averageLosses = nu.array([])
+# set weights and ws
+if os.path.exists('weights.pickle'):
+    with open('weights.pickle', 'rb') as file:
+        weights = pickle.load(file)
+    ws = weights[-1, :]
+else:
+    def wsModel(loms, w0, w1, w2, w3, w4, w5):
+        n = len(loms)
+        result = nu.concatenate([
+            nu.ones(n).reshape(-1, 1),
+            loms.reshape(-1, 1),
+            (loms**2).reshape(-1, 1),
+            (loms**3).reshape(-1, 1),
+            (loms**4).reshape(-1, 1),
+            (loms**5).reshape(-1, 1)
+        ], axis=-1) @ nu.array([w0, w1, w2, w3, w4, w5]).reshape(-1, 1)
+        return result.ravel()
+    ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(minRadius**2 - loms**2) + Z0-minRadius, p0=ws.tolist())
+    ws = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
+    weights = nu.array([[ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]]]).reshape(1, -1)
+# set step
+if os.path.exists('weights.pickle'):
+    step = weights.shape[0]
+else:
+    step = 1
 while True:
     currentLoss = 0
     # update w
@@ -102,6 +119,12 @@ while True:
         ws[i] -= alpha * ( pLoss - mLoss )/(2*h)
         currentLoss += (pLoss+mLoss)/2
     averageLosses = nu.append(averageLosses, currentLoss)
+    weights = nu.concatenate([weights, ws.reshape(1, -1)])
+    print('step: {:>2}, avgLoss: {}'.format(step, currentLoss))
     # store losses
     with open('avgerageLosses.pickle', 'wb') as file:
         pickle.dump(averageLosses, file)
+    with open('weights.pickle', 'wb') as file:
+        pickle.dump(weights, file)
+    # next loop
+    step += 1
