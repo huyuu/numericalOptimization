@@ -65,6 +65,7 @@ def loss(ws):
         time.sleep(3)
     loss = getVariance(cookedPath)
     # if we get loss, delete curveDistribution, so make sure comsol wait for enough long time after study is completed.
+    os.remove(cookedPath)
     os.remove(rawPath)
     return loss
 
