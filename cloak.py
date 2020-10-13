@@ -46,7 +46,9 @@ def getVariance(path):
     data = pd.read_csv(path, skiprows=8)
     data.columns = ['r', 'z', 'B']
     data = data.pivot(index='r', columns='z', values='B')
-    return nu.var(data.values)
+    _var = nu.var(data.values)
+    del data
+    return _var
 
 
 def loss(ws):
