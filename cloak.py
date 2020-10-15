@@ -12,7 +12,7 @@ from numpy import sqrt
 brDistributionPath = './BrDistribution.csv'
 bzDistributionPath = './BzDistribution.csv'
 alpha = 1e-4
-h = 1e-6
+h = 1e-4
 minRadius = 1.5e-2
 Z0 = 0.05
 loms = nu.linspace(0, 0.9*minRadius, 100)
@@ -61,10 +61,15 @@ def loss(ws):
         'z': zms
     })
     data.to_csv(rawPath, index=False)
+    del data
     # get loss
     cookedPath = './BzDistribution.csv'
-    while not os.path.exists(cookedPath):
+    while True:
+        if os.path.exists(cookedPath):
+            if os.path.getsize(cookedPath) >= 100:
+                break
         time.sleep(3)
+
     loss = getVariance(cookedPath)
     # if we get loss, delete curveDistribution, so make sure comsol wait for enough long time after study is completed.
     os.remove(cookedPath)
