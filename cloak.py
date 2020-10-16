@@ -11,8 +11,8 @@ from numpy import sqrt
 # Constant
 brDistributionPath = './BrDistribution.csv'
 bzDistributionPath = './BzDistribution.csv'
-alpha = 1e-4
-h = 1e-4
+alpha = 1e-2
+h = 1e-3
 minRadius = 1.5e-2
 Z0 = 0.05
 loms = nu.linspace(0, 0.9*minRadius, 100)
