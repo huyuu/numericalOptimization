@@ -74,16 +74,16 @@ def loss(ws):
     # if we get loss, delete curveDistribution, so make sure comsol wait for enough long time after study is completed.
     try:
         os.remove(cookedPath)
-    except:
+    except PermissionError:
         time.sleep(2)
-    finally:
         os.remove(cookedPath)
+
     try:
         os.remove(rawPath)
-    except:
+    except PermissionError:
         time.sleep(2)
-    finally:
         os.remove(rawPath)
+        
     return loss
 
 
