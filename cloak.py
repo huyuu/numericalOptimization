@@ -124,6 +124,7 @@ while True:
         _wm[i] -= h
         pLoss = loss(_wp)
         mLoss = loss(_wm)
+        print('w[{}] -= {} * ({} - {}) / (2*{})'.format(i, alpha, pLoss, mLoss, h))
         ws[i] -= alpha * ( pLoss - mLoss )/(2*h)
         currentLoss += (pLoss+mLoss)/2
     averageLosses = nu.append(averageLosses, currentLoss)
