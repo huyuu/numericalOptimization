@@ -11,7 +11,7 @@ from numpy import sqrt
 # Constant
 brDistributionPath = './BrDistribution.csv'
 bzDistributionPath = './BzDistribution.csv'
-alpha = 1e-2
+alpha = 1.0
 h = 1e-3
 minRadius = 1.5e-2
 Z0 = 0.05
@@ -22,21 +22,11 @@ ws = nu.zeros(6)
 
 def curveFunction(loms):
     if loms is nu.float:
-        return ws[0] +\
-        ws[1] * loms**1 +\
-        ws[2] * loms**2 +\
-        ws[3] * loms**3 +\
-        ws[4] * loms**4 +\
-        ws[5] * loms**5
+        return ws[0] + ws[1] * loms**1 + ws[2] * loms**2 + ws[3] * loms**3 + ws[4] * loms**4 + ws[5] * loms**5
     elif len(loms) >= 2:
         zms = nu.zeros(len(loms))
         for i, lo in enumerate(loms):
-            zms[i] = ws[0] +\
-            ws[1] * lo**1 +\
-            ws[2] * lo**2 +\
-            ws[3] * lo**3 +\
-            ws[4] * lo**4 +\
-            ws[5] * lo**5
+            zms[i] = ws[0] + ws[1] * lo**1 + ws[2] * lo**2 + ws[3] * lo**3 + ws[4] * lo**4 + ws[5] * lo**5
         return zms
     else:
         raise ValueError
@@ -83,7 +73,7 @@ def loss(ws):
     except PermissionError:
         time.sleep(2)
         os.remove(rawPath)
-        
+
     return loss
 
 
