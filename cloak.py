@@ -128,26 +128,26 @@ else:
     step = 1
 
 start = dt.datetime.now()
-while True:
-    minimize(fun=loss, x0=ws, method='CG', jac=None, callback=callback)
-    # # update w
-    # for i in range(6):
-    #     _wp = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
-    #     _wm = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
-    #     _wp[i] += h
-    #     _wm[i] -= h
-    #     pLoss = loss(_wp)
-    #     mLoss = loss(_wm)
-    #     print('w[{}] -= {} * ({} - {}) / (2*{})'.format(i, alpha, pLoss, mLoss, h))
-    #     ws[i] -= ws[] * ( pLoss - mLoss )/(2*h)
-    # currentLoss = loss(ws)
-    # averageLosses = nu.append(averageLosses, currentLoss)
-    # weights = nu.concatenate([weights, ws.reshape(1, -1)])
-    # print('step: {:>2}, avgLoss: {}'.format(step, currentLoss))
-    # store losses
-    with open('avgerageLosses.pickle', 'wb') as file:
-        pickle.dump(averageLosses, file)
-    with open('weights.pickle', 'wb') as file:
-        pickle.dump(weights, file)
-    # next loop
-    step += 1
+# while True:
+result = minimize(fun=loss, x0=ws, method='CG', jac=None, callback=callback, tol=1e-8)
+# # update w
+# for i in range(6):
+#     _wp = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
+#     _wm = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
+#     _wp[i] += h
+#     _wm[i] -= h
+#     pLoss = loss(_wp)
+#     mLoss = loss(_wm)
+#     print('w[{}] -= {} * ({} - {}) / (2*{})'.format(i, alpha, pLoss, mLoss, h))
+#     ws[i] -= ws[] * ( pLoss - mLoss )/(2*h)
+# currentLoss = loss(ws)
+# averageLosses = nu.append(averageLosses, currentLoss)
+# weights = nu.concatenate([weights, ws.reshape(1, -1)])
+# print('step: {:>2}, avgLoss: {}'.format(step, currentLoss))
+# store losses
+with open('avgerageLosses.pickle', 'wb') as file:
+    pickle.dump(averageLosses, file)
+with open('weights.pickle', 'wb') as file:
+    pickle.dump(weights, file)
+# next loop
+step += 1
