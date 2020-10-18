@@ -5,19 +5,21 @@ import os
 import time
 import pickle
 from scipy.optimize import curve_fit
+from scipy.optimize import minimize
 from numpy import sqrt
 
 
 # Constant
 brDistributionPath = './BrDistribution.csv'
 bzDistributionPath = './BzDistribution.csv'
-alpha = 1.0
+alpha = 1e13
 h = 1e-3
 minRadius = 1.5e-2
 Z0 = 0.05
 loms = nu.linspace(0, 0.9*minRadius, 100)
 # gloabl variable
 ws = nu.zeros(6)
+averageLosses = None
 
 
 def curveFunction(loms):
@@ -77,6 +79,13 @@ def loss(ws):
     return loss
 
 
+def callback(ws):
+    currentLoss = loss(ws)
+    averageLosses = nu.append(averageLosses, currentLoss)
+    weights = nu.concatenate([weights, ws.reshape(1, -1)])
+    print('step: {:>2}, avgLoss: {}'.format(step, currentLoss))
+
+
 # Main
 # show init ws
 # pl.scatter(loms, sqrt(minRadius**2 - loms**2) + Z0-minRadius)
@@ -115,21 +124,21 @@ if os.path.exists('weights.pickle'):
 else:
     step = 1
 while True:
-    currentLoss = 0
-    # update w
-    for i in range(6):
-        _wp = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
-        _wm = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
-        _wp[i] += h
-        _wm[i] -= h
-        pLoss = loss(_wp)
-        mLoss = loss(_wm)
-        print('w[{}] -= {} * ({} - {}) / (2*{})'.format(i, alpha, pLoss, mLoss, h))
-        ws[i] -= alpha * ( pLoss - mLoss )/(2*h)
-        currentLoss += (pLoss+mLoss)/2
-    averageLosses = nu.append(averageLosses, currentLoss)
-    weights = nu.concatenate([weights, ws.reshape(1, -1)])
-    print('step: {:>2}, avgLoss: {}'.format(step, currentLoss))
+    minimize(func=loss, x0=ws, method='CG', jac=None, callback=callback)
+    # # update w
+    # for i in range(6):
+    #     _wp = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
+    #     _wm = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
+    #     _wp[i] += h
+    #     _wm[i] -= h
+    #     pLoss = loss(_wp)
+    #     mLoss = loss(_wm)
+    #     print('w[{}] -= {} * ({} - {}) / (2*{})'.format(i, alpha, pLoss, mLoss, h))
+    #     ws[i] -= ws[] * ( pLoss - mLoss )/(2*h)
+    # currentLoss = loss(ws)
+    # averageLosses = nu.append(averageLosses, currentLoss)
+    # weights = nu.concatenate([weights, ws.reshape(1, -1)])
+    # print('step: {:>2}, avgLoss: {}'.format(step, currentLoss))
     # store losses
     with open('avgerageLosses.pickle', 'wb') as file:
         pickle.dump(averageLosses, file)
