@@ -87,6 +87,10 @@ def callback(ws):
     weights = nu.concatenate([weights, ws.reshape(1, -1)])
     timeDelta = (dt.datetime.now() - start).total_seconds()
     print('step: {:>2}, avgLoss: {}, cost: {:>4.2f}[min]'.format(step, currentLoss, timeDelta/60))
+    with open('averageLosses.pickle', 'wb') as file:
+        pickle.dump(averageLosses, file)
+    with open('weights.pickle', 'wb') as file:
+        pickle.dump(weights, file)
     start = dt.datetime.now()
     step += 1
 
