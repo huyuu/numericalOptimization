@@ -4,6 +4,7 @@ from matplotlib import pyplot as pl
 import os
 import time
 import pickle
+import datetime as dt
 from scipy.optimize import curve_fit
 from scipy.optimize import minimize
 from numpy import sqrt
@@ -83,7 +84,9 @@ def callback(ws):
     currentLoss = loss(ws)
     averageLosses = nu.append(averageLosses, currentLoss)
     weights = nu.concatenate([weights, ws.reshape(1, -1)])
-    print('step: {:>2}, avgLoss: {}'.format(step, currentLoss))
+    timeDelta = (dt.datetime.now() - start).total_seconds()
+    print('step: {:>2}, avgLoss: {:.10g}, cost: {:>4.2f}[min]'.format(step, currentLoss, timeDelta/3600))
+    start = dt.datetime.now()
 
 
 # Main
@@ -123,6 +126,8 @@ if os.path.exists('weights.pickle'):
     step = weights.shape[0]
 else:
     step = 1
+
+start = dt.datetime.now()
 while True:
     minimize(fun=loss, x0=ws, method='CG', jac=None, callback=callback)
     # # update w
