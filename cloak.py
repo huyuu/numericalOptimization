@@ -82,6 +82,7 @@ def loss(ws):
 
 def callback(ws):
     currentLoss = loss(ws)
+    global averageLosses, weights, start
     averageLosses = nu.append(averageLosses, currentLoss)
     weights = nu.concatenate([weights, ws.reshape(1, -1)])
     timeDelta = (dt.datetime.now() - start).total_seconds()
@@ -96,8 +97,8 @@ def callback(ws):
 # pl.show()
 
 # set avgLosses
-if os.path.exists('avgerageLosses.pickle'):
-    with open('avgerageLosses.pickle', 'rb') as file:
+if os.path.exists('averageLosses.pickle'):
+    with open('averageLosses.pickle', 'rb') as file:
         averageLosses = pickle.load(file)
 else:
     averageLosses = nu.array([])
@@ -145,7 +146,7 @@ result = minimize(fun=loss, x0=ws, method='Nelder-Mead', jac=None, callback=call
 # weights = nu.concatenate([weights, ws.reshape(1, -1)])
 # print('step: {:>2}, avgLoss: {}'.format(step, currentLoss))
 # store losses
-with open('avgerageLosses.pickle', 'wb') as file:
+with open('averageLosses.pickle', 'wb') as file:
     pickle.dump(averageLosses, file)
 with open('weights.pickle', 'wb') as file:
     pickle.dump(weights, file)
