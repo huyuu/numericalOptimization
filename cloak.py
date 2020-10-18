@@ -82,12 +82,13 @@ def loss(ws):
 
 def callback(ws):
     currentLoss = loss(ws)
-    global averageLosses, weights, start
+    global averageLosses, weights, start, step
     averageLosses = nu.append(averageLosses, currentLoss)
     weights = nu.concatenate([weights, ws.reshape(1, -1)])
     timeDelta = (dt.datetime.now() - start).total_seconds()
-    print('step: {:>2}, avgLoss: {:.10g}, cost: {:>4.2f}[min]'.format(step, currentLoss, timeDelta/3600))
+    print('step: {:>2}, avgLoss: {}, cost: {:>4.2f}[min]'.format(step, currentLoss, timeDelta/60))
     start = dt.datetime.now()
+    step += 1
 
 
 # Main
@@ -151,4 +152,4 @@ with open('averageLosses.pickle', 'wb') as file:
 with open('weights.pickle', 'wb') as file:
     pickle.dump(weights, file)
 # next loop
-step += 1
+# step += 1
