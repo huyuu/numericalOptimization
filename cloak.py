@@ -124,7 +124,7 @@ if os.path.exists('weights.pickle'):
 else:
     step = 1
 while True:
-    minimize(func=loss, x0=ws, method='CG', jac=None, callback=callback)
+    minimize(fun=loss, x0=ws, method='CG', jac=None, callback=callback)
     # # update w
     # for i in range(6):
     #     _wp = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
