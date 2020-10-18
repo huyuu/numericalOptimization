@@ -26,7 +26,10 @@ def curveFunction(loms, ws):
 
 with open('weights.pickle', 'rb') as file:
     weights = pickle.load(file)
-    print(weights)
+    print(f'weights = {weights}')
+with open('avgLosses.pickle', 'rb') as file:
+    avgLosses = pickle.load(file)
+    print(f'losses = {avgLosses}')
 loms = nu.linspace(0, 0.9*minRadius, 100)
 
 for i in range(weights.shape[0]):
