@@ -41,7 +41,7 @@ def getVariance(path):
     data = data.pivot(index='r', columns='z', values='B')
     _var = nu.var(data.values)
     del data
-    return _var
+    return _var * 1e8
 
 
 def loss(ws):
