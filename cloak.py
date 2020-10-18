@@ -135,8 +135,8 @@ else:
 
 start = dt.datetime.now()
 # while True:
-# result = minimize(fun=loss, x0=ws, method='Nelder-Mead', jac=None, callback=callback)
-result = fmin_cg(f=loss, x0=ws, maxiter=10000, callback=callback)
+result = minimize(fun=loss, x0=ws, method='BFGS', jac=None, callback=callback)
+# result = fmin_cg(f=loss, x0=ws, maxiter=10000, callback=callback)
 # # update w
 # for i in range(6):
 #     _wp = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
