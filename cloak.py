@@ -32,6 +32,7 @@ def curveFunction(loms, ws):
             zms[i] = ws[0] + ws[1] * lo**1 + ws[2] * lo**2 + ws[3] * lo**3 + ws[4] * lo**4 + ws[5] * lo**5
         return zms
     else:
+        print('ValueError')
         raise ValueError
 
 
@@ -39,9 +40,8 @@ def getVariance(path):
     data = pd.read_csv(path, skiprows=8)
     data.columns = ['r', 'z', 'B']
     data = data.pivot(index='r', columns='z', values='B')
-    _var = nu.var(data.values)
-    del data
-    return _var * 1e16
+    _var = nu.var(data.iloc[:, 46].values)
+    return _var
 
 
 def loss(ws):
