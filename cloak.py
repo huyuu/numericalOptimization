@@ -48,13 +48,14 @@ def loss(ws):
     # create index
     rawPath = './curveDistribution.csv'
     # create curve distribution
+    global loms
     zms = curveFunction(loms)
     data = pd.DataFrame({
         'r': loms,
         'z': zms
     })
+    print(data)
     data.to_csv(rawPath, index=False)
-    del data
     # get loss
     cookedPath = './BzDistribution.csv'
     while True:
