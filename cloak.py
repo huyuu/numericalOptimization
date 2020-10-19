@@ -23,7 +23,7 @@ ws = nu.zeros(6)
 averageLosses = None
 
 
-def curveFunction(loms):
+def curveFunction(loms, ws):
     if loms is nu.float:
         return ws[0] + ws[1] * loms**1 + ws[2] * loms**2 + ws[3] * loms**3 + ws[4] * loms**4 + ws[5] * loms**5
     elif len(loms) >= 2:
@@ -41,7 +41,7 @@ def getVariance(path):
     data = data.pivot(index='r', columns='z', values='B')
     _var = nu.var(data.values)
     del data
-    return _var * 1e8
+    return _var * 1e16
 
 
 def loss(ws):
@@ -49,7 +49,7 @@ def loss(ws):
     rawPath = './curveDistribution.csv'
     # create curve distribution
     global loms
-    zms = curveFunction(loms)
+    zms = curveFunction(loms, ws)
     data = pd.DataFrame({
         'r': loms,
         'z': zms
