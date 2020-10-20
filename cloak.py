@@ -54,7 +54,7 @@ def loss(ws):
         'r': loms,
         'z': zms
     })
-    print(data)
+    # print(data)
     data.to_csv(rawPath, index=False)
     # get loss
     cookedPath = './BzDistribution.csv'
