@@ -35,4 +35,4 @@ loms = nu.linspace(0, 0.9*minRadius, 100)
 for i in range(weights.shape[0]):
     zms = curveFunction(loms, weights[i, :])
     pl.scatter(loms, zms)
-    # pl.show()
+    pl.show()
