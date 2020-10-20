@@ -160,5 +160,5 @@ start = dt.datetime.now()
 #     step += 1
 
 
-result = minimize(fun=loss, x0=ws, method='BFGS', jac=None, callback=callback, options={'maxiter': 10000, 'disp': True})
+result = minimize(fun=loss, x0=ws, method='Nelder-Mead', jac=None, callback=callback, options={'maxiter': 10000, 'disp': True})
 # result = fmin_cg(f=loss, x0=ws, maxiter=10000, callback=callback)
