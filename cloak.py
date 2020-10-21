@@ -40,7 +40,7 @@ def getVariance(path):
     data = pd.read_csv(path, skiprows=8)
     data.columns = ['r', 'z', 'B']
     data = data.pivot(index='r', columns='z', values='B')
-    _var = nu.var(data.iloc[:, 46].values)
+    _var = nu.var(data.iloc[:200*3//4, 46].values)
     return _var
 
 
@@ -125,7 +125,7 @@ else:
             (loms**5).reshape(-1, 1)
         ], axis=-1) @ nu.array([w0, w1, w2, w3, w4, w5]).reshape(-1, 1)
         return result.ravel()
-    ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(minRadius**2 - loms**2) + Z0-minRadius, p0=ws.tolist())
+    ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(minRadius**2 - loms**2) + Z0+minRadius, p0=ws.tolist())
     ws = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
     weights = nu.array([[ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]]]).reshape(1, -1)
 # set step

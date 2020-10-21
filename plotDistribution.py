@@ -16,3 +16,6 @@ print('variance: {:.5f}'.format(nu.var(data.values)))
 pl.contourf(data.index, data.columns, data.values.T, levels=50)
 pl.colorbar()
 pl.show()
+
+pl.plot(data.iloc[:, 23].values)
+pl.show()
