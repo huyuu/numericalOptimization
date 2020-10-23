@@ -6,7 +6,7 @@ import time
 import pickle
 import datetime as dt
 from scipy.optimize import curve_fit
-from scipy.optimize import minimize, fmin_cg
+from scipy.optimize import minimize, fmin_cg, Bounds, LinearConstraint
 from numpy import sqrt
 
 
@@ -17,7 +17,7 @@ alpha = 1
 h = 1e-3
 minRadius = 1.5e-2
 Z0 = 0.05
-loms = nu.linspace(0, 0.9*minRadius, 100)
+loms = nu.linspace(0, 0.9*minRadius, 300)
 # gloabl variable
 ws = nu.zeros(6)
 averageLosses = None
@@ -81,7 +81,7 @@ def loss(ws):
     return loss
 
 
-def callback(ws):
+def callback(ws, optimalResult):
     currentLoss = loss(ws)
     global averageLosses, weights, start, step
     averageLosses = nu.append(averageLosses, currentLoss)
@@ -94,6 +94,7 @@ def callback(ws):
         pickle.dump(weights, file)
     start = dt.datetime.now()
     step += 1
+    return False
 
 
 # Main
@@ -125,7 +126,8 @@ else:
             (loms**5).reshape(-1, 1)
         ], axis=-1) @ nu.array([w0, w1, w2, w3, w4, w5]).reshape(-1, 1)
         return result.ravel()
-    ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(minRadius**2 - loms**2) + Z0+minRadius, p0=ws.tolist())
+    R = 0.9*minRadius
+    ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(R**2 - loms**2) + Z0-R/2, p0=ws.tolist())
     ws = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
     weights = nu.array([[ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]]]).reshape(1, -1)
 # set step
@@ -159,6 +161,20 @@ start = dt.datetime.now()
 #     # next loop
 #     step += 1
 
+ZL = Z0 - 0.9*minRadius
+ZU = Z0 + 0.9*minRadius
+_loms = nu.linspace(0, 0.9*minRadius, 10)
+_A = nu.array([1, _loms[0], _loms[0]**2, _loms[0]**3, _loms[0]**4, _loms[0]**5]).reshape(1, -1)
+for lo in _loms[1:]:
+    _A = nu.concatenate([_A, nu.array([1, lo, lo**2, lo**3, lo**4, lo**5]).reshape(1, -1)])
+constraint = LinearConstraint(A=_A, lb=ZL, ub=ZU)
+result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, jac=None, callback=callback, options={'maxiter': 10000, 'disp': True})
 
-result = minimize(fun=loss, x0=ws, method='Nelder-Mead', jac=None, callback=callback, options={'maxiter': 10000, 'disp': True})
-# result = fmin_cg(f=loss, x0=ws, maxiter=10000, callback=callback)
+# constraints = []
+# for lo in _loms:
+#     constraints.append({
+#         'type': 'ineq',
+#         'fun': lambda xs: [1, lo, lo**2, lo**3, lo**4, lo**5] @ xs.reshape(-1, 1) - ZL,
+#         'jac': [1, lo, lo**2, lo**3, lo**4, lo**5]
+#     })
+# result = minimize(fun=loss, x0=ws, method='SLSQP', constraints=constraints, jac=None, callback=callback, options={'maxiter': 10000, 'disp': True})
