@@ -21,6 +21,7 @@ loms = nu.linspace(0, 0.9*minRadius, 300)
 # gloabl variable
 ws = nu.zeros(6)
 averageLosses = None
+FMThickness = 1e-3
 
 
 def curveFunction(loms, ws):
@@ -36,7 +37,16 @@ def curveFunction(loms, ws):
         raise ValueError
 
 
-def getVariance(path):
+def isPointOnMagnet(lo, z, ws):
+    if z >= 0:
+        zm = curveFunction(lo, ws)
+        return abs(z-zm) <= FMThickness
+    else:
+        zm = -curveFunction(lo, ws)
+        return abs(z-zm) <= FMThickness
+
+
+def getVariance(path, ws):
     minRadius = 1.5e-2
     Z0 = 5e-2
     data = pd.read_csv(path, skiprows=8)
@@ -44,15 +54,28 @@ def getVariance(path):
     bsOut = nu.array([])
     bsIn = nu.array([])
     for i in data.index:
+        lo = data.iloc[i, 0]
+        z = data.iloc[i, 1]
+        z_abs = abs(z)
+        b = data.iloc[i, 2]
         # infinity region
-        if data.iloc[i, 0] > 1.5*minRadius or abs(data.iloc[i, 1]) > 1.4*Z0:
+        if lo > 1.5*minRadius or z_abs > 1.4*Z0:
+            continue
+        # near coil
+        elif minRadius*0.99 <= lo <= minRadius*1.01:
+            continue
+        # on magnet
+        elif isPointOnMagnet(lo, z, ws):
             continue
         # inside
-        elif data.iloc[i, 0] <= minRadius and abs(data.iloc[i, 1]) < Z0:
+        elif lo <= minRadius*0.99 and z_abs <= Z0:
             bsIn = nu.append(bsIn, data.iloc[i, 2])
         # outside
-        else:
+        elif lo >= minRadius*1.01 or z_abs > Z0:
             bsOut = nu.append(bsOut, data.iloc[i, 2])
+        # mergin
+        else:
+            continue
     return bsOut.var() + abs(bsIn).mean()
     # data = data.pivot(index='r', columns='z', values='B')
     # _var = nu.var(data.iloc[:200*3//4, 46].values)
@@ -79,7 +102,7 @@ def loss(ws):
                 break
         time.sleep(3)
 
-    loss = getVariance(cookedPath)
+    loss = getVariance(cookedPath, ws)
     # if we get loss, delete curveDistribution, so make sure comsol wait for enough long time after study is completed.
     try:
         os.remove(cookedPath)
