@@ -47,6 +47,7 @@ def isPointOnMagnet(lo, z, ws):
 
 
 def getVariance(path, ws):
+    assert os.path.exists(path)
     minRadius = 1.5e-2
     Z0 = 5e-2
     data = pd.read_csv(path, skiprows=8)
@@ -58,24 +59,17 @@ def getVariance(path, ws):
         z = data.iloc[i, 1]
         z_abs = abs(z)
         b = data.iloc[i, 2]
-        # infinity region
-        if lo > 1.5*minRadius or z_abs > 1.4*Z0:
-            continue
-        # near coil
-        elif minRadius*0.99 <= lo <= minRadius*1.01:
-            continue
-        # on magnet
-        elif isPointOnMagnet(lo, z, ws):
-            continue
         # inside
-        elif lo <= minRadius*0.99 and z_abs <= Z0:
+        if lo <= minRadius*0.99 and z_abs <= Z0:
             bsIn = nu.append(bsIn, data.iloc[i, 2])
         # outside
-        elif lo >= minRadius*1.01 or z_abs > Z0:
+        elif 1.4*minRadius >= lo >= minRadius*1.01 or 1.4*Z0 >= z_abs > Z0:
             bsOut = nu.append(bsOut, data.iloc[i, 2])
         # mergin
         else:
             continue
+    assert bsIn.shape[0] >= 1
+    assert bsOut.shape[0] >= 1
     return bsOut.var() + abs(bsIn).mean()
     # data = data.pivot(index='r', columns='z', values='B')
     # _var = nu.var(data.iloc[:200*3//4, 46].values)
