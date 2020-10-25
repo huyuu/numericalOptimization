@@ -37,11 +37,26 @@ def curveFunction(loms, ws):
 
 
 def getVariance(path):
+    minRadius = 1.5e-2
+    Z0 = 5e-2
     data = pd.read_csv(path, skiprows=8)
     data.columns = ['r', 'z', 'B']
-    data = data.pivot(index='r', columns='z', values='B')
-    _var = nu.var(data.iloc[:200*3//4, 46].values)
-    return _var
+    bsOut = nu.array([])
+    bsIn = nu.array([])
+    for i in data.index:
+        # infinity region
+        if data.iloc[i, 0] > 1.5*minRadius or abs(data.iloc[i, 1]) > 1.4*Z0:
+            continue
+        # inside
+        elif data.iloc[i, 0] <= minRadius and abs(data.iloc[i, 1]) < Z0:
+            bsIn = nu.append(bsIn, data.iloc[i, 2])
+        # outside
+        else:
+            bsOut = nu.append(bsOut, data.iloc[i, 2])
+    return bsOut.var() + abs(bsIn).mean()
+    # data = data.pivot(index='r', columns='z', values='B')
+    # _var = nu.var(data.iloc[:200*3//4, 46].values)
+    # return _var
 
 
 def loss(ws):
