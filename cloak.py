@@ -81,7 +81,7 @@ def loss(ws):
     return loss
 
 
-def callback(ws, optimalResult):
+def callback(ws, result):
     currentLoss = loss(ws)
     global averageLosses, weights, start, step
     averageLosses = nu.append(averageLosses, currentLoss)
@@ -94,6 +94,8 @@ def callback(ws, optimalResult):
         pickle.dump(weights, file)
     start = dt.datetime.now()
     step += 1
+    for key, value in result.items():
+        print(f'{key}: {value}')
     return False
 
 
@@ -127,8 +129,9 @@ else:
         ], axis=-1) @ nu.array([w0, w1, w2, w3, w4, w5]).reshape(-1, 1)
         return result.ravel()
     R = 0.9*minRadius
-    ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(R**2 - loms**2) + Z0-R/2, p0=ws.tolist())
+    ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(R**2 - loms**2) + Z0-R, p0=ws.tolist())
     ws = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
+    # ws = nu.array([Z0, 0, 0, 0, 0, 0])
     weights = nu.array([[ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]]]).reshape(1, -1)
 # set step
 if os.path.exists('weights.pickle'):
@@ -167,14 +170,20 @@ _loms = nu.linspace(0, 0.9*minRadius, 10)
 _A = nu.array([1, _loms[0], _loms[0]**2, _loms[0]**3, _loms[0]**4, _loms[0]**5]).reshape(1, -1)
 for lo in _loms[1:]:
     _A = nu.concatenate([_A, nu.array([1, lo, lo**2, lo**3, lo**4, lo**5]).reshape(1, -1)])
+print(_A)
 constraint = LinearConstraint(A=_A, lb=ZL, ub=ZU)
-result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, jac=None, callback=callback, options={'maxiter': 10000, 'disp': True})
+result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, jac=None, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 1, 'verbose': 3})
 
-# constraints = []
-# for lo in _loms:
-#     constraints.append({
-#         'type': 'ineq',
-#         'fun': lambda xs: [1, lo, lo**2, lo**3, lo**4, lo**5] @ xs.reshape(-1, 1) - ZL,
-#         'jac': [1, lo, lo**2, lo**3, lo**4, lo**5]
-#     })
+constraints = []
+for lo in _loms:
+    constraints.append({
+        'type': 'ineq',
+        'fun': lambda w: w[0] + w[1]*lo + w[2]*lo**2 + w[3]*lo**3 + w[4]*lo**4 + w[5]*lo**5 - ZL,
+        # 'jac': lambda xs: nu.array([1, lo, lo**2, lo**3, lo**4, lo**5])
+    })
+    constraints.append({
+        'type': 'ineq',
+        'fun': lambda w: ZU - (w[0] + w[1]*lo + w[2]*lo**2 + w[3]*lo**3 + w[4]*lo**4 + w[5]*lo**5),
+        # 'jac': lambda xs: -1 * nu.array([1, lo, lo**2, lo**3, lo**4, lo**5])
+    })
 # result = minimize(fun=loss, x0=ws, method='SLSQP', constraints=constraints, jac=None, callback=callback, options={'maxiter': 10000, 'disp': True})
