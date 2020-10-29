@@ -15,10 +15,9 @@ brDistributionPath = './BrDistribution.csv'
 bzDistributionPath = './BzDistribution.csv'
 alpha = 1
 h = 1e-3
-minRadius = 1.5e-2
-Z0 = 0.05
+minRadius = 1.5
+Z0 = 5
 # gloabl variable
-ws = nu.zeros(4)
 averageLosses = None
 FMThickness = 1e-3
 points = 5
@@ -129,8 +128,7 @@ def fitWith(samples):
 
 # Main
 
-losses = None
-step = 1
+ws = nu.zeros(4).reshape(1, -1)
 
 for z0 in zms:
     for z1 in zms:
@@ -142,18 +140,15 @@ for z0 in zms:
                         [loms[1], z1],
                         [loms[2], z2],
                         [loms[3], z3],
-                        [loms[4], z4]
+                        [loms[4], z4],
                     ])
-                    ws = fitWith(samples)
-                    result = loss(ws)
-                    if losses is None:
-                        losses = nu.append(ws, result)
-                        losses = losses.reshape(1, -1)
-                    else:
-                        row = nu.append(ws, result).reshape(1, -1)
-                        losses = nu.concatenate([losses, row])
-                    print('Step {:>4}: ws = {}, loss = {}'.format(step, ws, result))
-                    step += 1
+                    ws = nu.concatenate([ws, fitWith(samples).reshape(1, -1)])
+ws = ws[1:, :]
 
-with open('stupidLosses.pickle', 'wb') as file:
-    pickle.dump(losses, file)
+for i in range(ws.shape[1]):
+    pl.scatter(i*nu.ones(ws.shape[0]), ws[:, i], label=f'w{i}')
+pl.yscale('log')
+pl.xlabel('w index')
+pl.ylabel('value')
+pl.legend()
+pl.show()

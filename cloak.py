@@ -15,13 +15,13 @@ brDistributionPath = './BrDistribution.csv'
 bzDistributionPath = './BzDistribution.csv'
 alpha = 1
 h = 1e-3
-minRadius = 1.5e-2
-Z0 = 0.05
+minRadius = 1.5  # 1.5cm
+Z0 = 5  # 5cm
 loms = nu.linspace(0, 0.9*minRadius, 300)
 # gloabl variable
 ws = nu.zeros(4)
 averageLosses = None
-FMThickness = 1e-3
+FMThickness = 0.1  # 0.1cm
 
 
 def curveFunction(loms, ws):
@@ -48,10 +48,11 @@ def isPointOnMagnet(lo, z, ws):
 
 def getVariance(path, ws):
     assert os.path.exists(path)
-    minRadius = 1.5e-2
-    Z0 = 5e-2
+    global minRadius, Z0
     data = pd.read_csv(path, skiprows=8)
     data.columns = ['r', 'z', 'B']
+    data['r'] *= 1e2  # [m] -> [cm]
+    data['z'] *= 1e2  # [m] -> [cm]
     bsOut = nu.array([])
     bsIn = nu.array([])
     for i in data.index:
@@ -83,8 +84,8 @@ def loss(ws):
     global loms
     zms = curveFunction(loms, ws)
     data = pd.DataFrame({
-        'r': loms,
-        'z': zms
+        'r': loms * 1e-2,
+        'z': zms * 1e-2
     })
     # print(data)
     data.to_csv(rawPath, index=False)
@@ -94,7 +95,7 @@ def loss(ws):
         if os.path.exists(cookedPath):
             if os.path.getsize(cookedPath) >= 100:
                 break
-        time.sleep(3)
+        time.sleep(1)
 
     loss = getVariance(cookedPath, ws)
     # if we get loss, delete curveDistribution, so make sure comsol wait for enough long time after study is completed.
@@ -210,8 +211,8 @@ for lo in _loms[1:]:
     _A = nu.concatenate([_A, nu.array([1, lo, lo**2, lo**3]).reshape(1, -1)])
 print(_A)
 constraint = LinearConstraint(A=_A, lb=ZL, ub=ZU)
-# result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 1e4, 'verbose': 3, 'barrier_tol': 1e-8})
-result = minimize(fun=loss, x0=ws, method='BFGS', callback=callback)
+result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 1, 'verbose': 3, 'barrier_tol': 1e-8})
+# result = minimize(fun=loss, x0=ws, method='BFGS', callback=callback)
 
 constraints = []
 # for lo in _loms:
