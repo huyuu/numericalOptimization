@@ -204,7 +204,7 @@ for lo in _loms[1:]:
     _A = nu.concatenate([_A, nu.array([1, lo, lo**2, lo**3, lo**4, lo**5]).reshape(1, -1)])
 print(_A)
 constraint = LinearConstraint(A=_A, lb=ZL, ub=ZU)
-result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, jac=None, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 1, 'verbose': 3})
+result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, jac=None, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 1e-7, 'verbose': 3})
 
 constraints = []
 for lo in _loms:
