@@ -19,18 +19,18 @@ minRadius = 1.5e-2
 Z0 = 0.05
 loms = nu.linspace(0, 0.9*minRadius, 300)
 # gloabl variable
-ws = nu.zeros(6)
+ws = nu.zeros(4)
 averageLosses = None
 FMThickness = 1e-3
 
 
 def curveFunction(loms, ws):
     if loms is nu.float:
-        return ws[0] + ws[1] * loms**1 + ws[2] * loms**2 + ws[3] * loms**3 + ws[4] * loms**4 + ws[5] * loms**5
+        return ws[0] + ws[1] * loms**1 + ws[2] * loms**2 + ws[3] * loms**3# + ws[4] * loms**4 + ws[5] * loms**5
     elif len(loms) >= 2:
         zms = nu.zeros(len(loms))
         for i, lo in enumerate(loms):
-            zms[i] = ws[0] + ws[1] * lo**1 + ws[2] * lo**2 + ws[3] * lo**3 + ws[4] * lo**4 + ws[5] * lo**5
+            zms[i] = ws[0] + ws[1] * lo**1 + ws[2] * lo**2 + ws[3] * lo**3# + ws[4] * lo**4 + ws[5] * lo**5
         return zms
     else:
         print('ValueError')
@@ -149,22 +149,26 @@ if os.path.exists('weights.pickle'):
         weights = pickle.load(file)
     ws = weights[-1, :]
 else:
-    def wsModel(loms, w0, w1, w2, w3, w4, w5):
+    # def wsModel(loms, w0, w1, w2, w3, w4, w5):
+    def wsModel(loms, w0, w1, w2, w3):
         n = len(loms)
         result = nu.concatenate([
             nu.ones(n).reshape(-1, 1),
             loms.reshape(-1, 1),
             (loms**2).reshape(-1, 1),
-            (loms**3).reshape(-1, 1),
-            (loms**4).reshape(-1, 1),
-            (loms**5).reshape(-1, 1)
-        ], axis=-1) @ nu.array([w0, w1, w2, w3, w4, w5]).reshape(-1, 1)
+            (loms**3).reshape(-1, 1)
+            # (loms**4).reshape(-1, 1),
+            # (loms**5).reshape(-1, 1)
+        # ], axis=-1) @ nu.array([w0, w1, w2, w3, w4, w5]).reshape(-1, 1)
+        ], axis=-1) @ nu.array([w0, w1, w2, w3]).reshape(-1, 1)
         return result.ravel()
     R = 0.9*minRadius
     ws, _ = curve_fit(wsModel, xdata=loms, ydata=sqrt(R**2 - loms**2) + Z0-R, p0=ws.tolist())
-    ws = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
-    # ws = nu.array([Z0, 0, 0, 0, 0, 0])
-    weights = nu.array([[ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]]]).reshape(1, -1)
+    # ws = nu.array([ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]])
+    ws = nu.array([ws[0], ws[1], ws[2], ws[3]])
+    # ws = nu.array([0.9*Z0, 0, 0, 0, 0, 0])
+    weights = nu.array([[ws[0], ws[1], ws[2], ws[3]]]).reshape(1, -1)
+    # weights = nu.array([[ws[0], ws[1], ws[2], ws[3], ws[4], ws[5]]]).reshape(1, -1)
 # set step
 if os.path.exists('weights.pickle'):
     step = weights.shape[0]
@@ -199,23 +203,26 @@ start = dt.datetime.now()
 ZL = Z0 - 0.9*minRadius
 ZU = Z0 + 0.9*minRadius
 _loms = nu.linspace(0, 0.9*minRadius, 10)
-_A = nu.array([1, _loms[0], _loms[0]**2, _loms[0]**3, _loms[0]**4, _loms[0]**5]).reshape(1, -1)
+# _A = nu.array([1, _loms[0], _loms[0]**2, _loms[0]**3, _loms[0]**4, _loms[0]**5]).reshape(1, -1)
+_A = nu.array([1, _loms[0], _loms[0]**2, _loms[0]**3]).reshape(1, -1)
 for lo in _loms[1:]:
-    _A = nu.concatenate([_A, nu.array([1, lo, lo**2, lo**3, lo**4, lo**5]).reshape(1, -1)])
+    # _A = nu.concatenate([_A, nu.array([1, lo, lo**2, lo**3, lo**4, lo**5]).reshape(1, -1)])
+    _A = nu.concatenate([_A, nu.array([1, lo, lo**2, lo**3]).reshape(1, -1)])
 print(_A)
 constraint = LinearConstraint(A=_A, lb=ZL, ub=ZU)
-result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, jac=None, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 1e-7, 'verbose': 3})
+# result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 1e4, 'verbose': 3, 'barrier_tol': 1e-8})
+result = minimize(fun=loss, x0=ws, method='BFGS', callback=callback)
 
 constraints = []
-for lo in _loms:
-    constraints.append({
-        'type': 'ineq',
-        'fun': lambda w: w[0] + w[1]*lo + w[2]*lo**2 + w[3]*lo**3 + w[4]*lo**4 + w[5]*lo**5 - ZL,
-        # 'jac': lambda xs: nu.array([1, lo, lo**2, lo**3, lo**4, lo**5])
-    })
-    constraints.append({
-        'type': 'ineq',
-        'fun': lambda w: ZU - (w[0] + w[1]*lo + w[2]*lo**2 + w[3]*lo**3 + w[4]*lo**4 + w[5]*lo**5),
-        # 'jac': lambda xs: -1 * nu.array([1, lo, lo**2, lo**3, lo**4, lo**5])
-    })
+# for lo in _loms:
+#     constraints.append({
+#         'type': 'ineq',
+#         'fun': lambda w: w[0] + w[1]*lo + w[2]*lo**2 + w[3]*lo**3 + w[4]*lo**4 + w[5]*lo**5 - ZL,
+#         # 'jac': lambda xs: nu.array([1, lo, lo**2, lo**3, lo**4, lo**5])
+#     })
+#     constraints.append({
+#         'type': 'ineq',
+#         'fun': lambda w: ZU - (w[0] + w[1]*lo + w[2]*lo**2 + w[3]*lo**3 + w[4]*lo**4 + w[5]*lo**5),
+#         # 'jac': lambda xs: -1 * nu.array([1, lo, lo**2, lo**3, lo**4, lo**5])
+#     })
 # result = minimize(fun=loss, x0=ws, method='SLSQP', constraints=constraints, jac=None, callback=callback, options={'maxiter': 10000, 'disp': True})
