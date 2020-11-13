@@ -7,7 +7,7 @@ import pickle
 import datetime as dt
 from scipy.optimize import curve_fit
 from scipy.optimize import minimize, fmin_cg, Bounds, LinearConstraint
-from numpy import sqrt
+from numpy import sqrt, abs
 
 
 # Constant
@@ -54,30 +54,38 @@ def getVariance(path, ws):
     data['r'] *= 1e2  # [m] -> [cm]
     data['z'] *= 1e2  # [m] -> [cm]
 
-    # bsOut = nu.array([])
-    # bsIn = nu.array([])
-    # for i in data.index:
-    #     lo = data.iloc[i, 0]
-    #     z = data.iloc[i, 1]
-    #     z_abs = abs(z)
-    #     b = data.iloc[i, 2]
-    #     # inside
-    #     if lo <= minRadius*0.99 and z_abs <= Z0:
-    #         bsIn = nu.append(bsIn, data.iloc[i, 2])
-    #     # outside
-    #     elif 1.4*minRadius >= lo >= minRadius*1.01 or 1.4*Z0 >= z_abs > Z0:
-    #         bsOut = nu.append(bsOut, data.iloc[i, 2])
-    #     # mergin
-    #     else:
-    #         continue
-    # assert bsIn.shape[0] >= 1
-    # assert bsOut.shape[0] >= 1
-    # return bsOut.var() + abs(bsIn).mean()
+    bsOut = nu.array([])
+    bsIn = nu.array([])
+    for i in data.index:
+        lo = data.iloc[i, 0]
+        z = data.iloc[i, 1]
+        z_abs = abs(z)
+        b = data.iloc[i, 2]
+        # inside
+        if lo <= minRadius*0.99 and z_abs <= Z0:
+            bsIn = nu.append(bsIn, data.iloc[i, 2])
+        # outside
+        # elif 1.4*minRadius >= lo >= minRadius*1.01 or 1.4*Z0 >= z_abs > Z0:
+        elif 1.4*minRadius >= lo and 1.4*Z0 >= z_abs > Z0:
+            bsOut = nu.append(bsOut, data.iloc[i, 2])
+        # mergin
+        else:
+            continue
+    print(bsIn)
+    print(f'bsIn shape = {bsIn.shape}')
+    print(bsOut)
+    print(f'bsOut shape = {bsOut.shape}')
+    bsIn = bsIn[~nu.isnan(bsIn)]
+    bsOut = bsOut[~nu.isnan(bsOut)]
+    assert bsIn.shape[0] >= 1000
+    assert bsOut.shape[0] >= 1000
+    return bsOut.var() + abs(bsIn).mean()
+    # return abs(bsIn).mean() / bsOut.mean()
 
-    data = data.pivot(index='r', columns='z', values='B')
-    _var = nu.var(data.iloc[:200*3//4, 46].values)
-    _mean = data.iloc[:200*3//4, 46].values.mean()
-    return _var + _mean
+    # data = data.pivot(index='r', columns='z', values='B')
+    # _var = nu.var(data.iloc[:200*3//4, 46].values)
+    # _mean = data.iloc[:200*3//4, 46].values.mean()
+    # return _var + abs(_mean)
 
 
 def loss(ws):
@@ -214,7 +222,7 @@ for lo in _loms[1:]:
     _A = nu.concatenate([_A, nu.array([1, lo, lo**2, lo**3]).reshape(1, -1)])
 print(_A)
 constraint = LinearConstraint(A=_A, lb=ZL, ub=ZU)
-result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 1, 'verbose': 3, 'barrier_tol': 1e-8})
+result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 0.1, 'verbose': 2, 'barrier_tol': 1e-8})
 # result = minimize(fun=loss, x0=ws, method='BFGS', callback=callback)
 
 constraints = []
