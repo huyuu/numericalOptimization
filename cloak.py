@@ -53,28 +53,31 @@ def getVariance(path, ws):
     data.columns = ['r', 'z', 'B']
     data['r'] *= 1e2  # [m] -> [cm]
     data['z'] *= 1e2  # [m] -> [cm]
-    bsOut = nu.array([])
-    bsIn = nu.array([])
-    for i in data.index:
-        lo = data.iloc[i, 0]
-        z = data.iloc[i, 1]
-        z_abs = abs(z)
-        b = data.iloc[i, 2]
-        # inside
-        if lo <= minRadius*0.99 and z_abs <= Z0:
-            bsIn = nu.append(bsIn, data.iloc[i, 2])
-        # outside
-        elif 1.4*minRadius >= lo >= minRadius*1.01 or 1.4*Z0 >= z_abs > Z0:
-            bsOut = nu.append(bsOut, data.iloc[i, 2])
-        # mergin
-        else:
-            continue
-    assert bsIn.shape[0] >= 1
-    assert bsOut.shape[0] >= 1
-    return bsOut.var() + abs(bsIn).mean()
-    # data = data.pivot(index='r', columns='z', values='B')
-    # _var = nu.var(data.iloc[:200*3//4, 46].values)
-    # return _var
+
+    # bsOut = nu.array([])
+    # bsIn = nu.array([])
+    # for i in data.index:
+    #     lo = data.iloc[i, 0]
+    #     z = data.iloc[i, 1]
+    #     z_abs = abs(z)
+    #     b = data.iloc[i, 2]
+    #     # inside
+    #     if lo <= minRadius*0.99 and z_abs <= Z0:
+    #         bsIn = nu.append(bsIn, data.iloc[i, 2])
+    #     # outside
+    #     elif 1.4*minRadius >= lo >= minRadius*1.01 or 1.4*Z0 >= z_abs > Z0:
+    #         bsOut = nu.append(bsOut, data.iloc[i, 2])
+    #     # mergin
+    #     else:
+    #         continue
+    # assert bsIn.shape[0] >= 1
+    # assert bsOut.shape[0] >= 1
+    # return bsOut.var() + abs(bsIn).mean()
+
+    data = data.pivot(index='r', columns='z', values='B')
+    _var = nu.var(data.iloc[:200*3//4, 46].values)
+    _mean = data.iloc[:200*3//4, 46].values.mean()
+    return _var + _mean
 
 
 def loss(ws):
