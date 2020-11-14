@@ -33,7 +33,7 @@ with open('averageLosses.pickle', 'rb') as file:
 loms = nu.linspace(0, 0.9*minRadius, 100)
 
 for i in range(weights.shape[0]):
-    if i%2 == 0:
+    if i%1 == 0:
         zms = curveFunction(loms, weights[i, :])
         pl.scatter(loms, zms)
         pl.show()

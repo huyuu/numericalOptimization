@@ -66,21 +66,21 @@ def getVariance(path, ws):
             bsIn = nu.append(bsIn, data.iloc[i, 2])
         # outside
         # elif 1.4*minRadius >= lo >= minRadius*1.01 or 1.4*Z0 >= z_abs > Z0:
-        elif 1.4*minRadius >= lo and 1.4*Z0 >= z_abs > Z0:
+        elif 2.0*minRadius >= lo and 1.8*Z0 >= z_abs > Z0:
             bsOut = nu.append(bsOut, data.iloc[i, 2])
         # mergin
         else:
             continue
-    print(bsIn)
-    print(f'bsIn shape = {bsIn.shape}')
-    print(bsOut)
-    print(f'bsOut shape = {bsOut.shape}')
+    # print(bsIn)
+    # print(f'bsIn shape = {bsIn.shape}')
+    # print(bsOut)
+    # print(f'bsOut shape = {bsOut.shape}')
     bsIn = bsIn[~nu.isnan(bsIn)]
     bsOut = bsOut[~nu.isnan(bsOut)]
     assert bsIn.shape[0] >= 1000
     assert bsOut.shape[0] >= 1000
-    return bsOut.var() + abs(bsIn).mean()
-    # return abs(bsIn).mean() / bsOut.mean()
+    # return bsOut.var() + abs(bsIn).mean()
+    return abs(bsIn).mean() / bsOut.mean()
 
     # data = data.pivot(index='r', columns='z', values='B')
     # _var = nu.var(data.iloc[:200*3//4, 46].values)
@@ -139,7 +139,8 @@ def callback(ws, result):
     start = dt.datetime.now()
     step += 1
     for key, value in result.items():
-        print(f'{key}: {value}')
+        # print(f'{key}: {value}')
+        pass
     return False
 
 
@@ -222,7 +223,7 @@ for lo in _loms[1:]:
     _A = nu.concatenate([_A, nu.array([1, lo, lo**2, lo**3]).reshape(1, -1)])
 print(_A)
 constraint = LinearConstraint(A=_A, lb=ZL, ub=ZU)
-result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 0.1, 'verbose': 2, 'barrier_tol': 1e-8})
+result = minimize(fun=loss, x0=ws, method='trust-constr', constraints=constraint, callback=callback, options={'maxiter': 100000, 'disp': True,  'initial_tr_radius': 0.1, 'verbose': 3})
 # result = minimize(fun=loss, x0=ws, method='BFGS', callback=callback)
 
 constraints = []
